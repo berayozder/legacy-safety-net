@@ -1,0 +1,14 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Java
+*.class
+
+# Safety net output (keep snapshots if you want, but usually ignore)
+examples/**/.safetynet/
+
+# OS
+.DS_Store
+ROADMAP.md
