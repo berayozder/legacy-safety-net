@@ -1,0 +1,35 @@
+name: Legacy Safety Net CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  safetynet:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Set up Java 8
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "8"
+
+      - name: Install Python dependencies
+        run: |
+          python -m venv .venv
+          . .venv/bin/activate
+          pip install --upgrade pip
+
+      - name: Run SafetyNet (strict mode)
+        run: |
+          . .venv/bin/activate
+          python -m safetynet.cli examples/legacy_java_app --main LegacyApp --strict
