@@ -4,12 +4,21 @@ from pathlib import Path
 def compile_and_run(project_path: str, main_class: str) -> dict:
     project = Path(project_path)
 
-    # Compile all .java files in the folder (simple MVP)
+    # 1️⃣ Try flat layout (Phase 1 legacy)
     java_files = list(project.glob("*.java"))
-    if not java_files:
-        raise FileNotFoundError("No .java files found in project path")
 
-    compile_cmd = ["javac"] + [str(p.name) for p in java_files]
+    # 2️⃣ Try Maven layout (Phase 1.5+)
+    if not java_files:
+        maven_src = project / "src" / "main" / "java"
+        if maven_src.exists():
+            java_files = list(maven_src.rglob("*.java"))
+
+    if not java_files:
+        raise FileNotFoundError(
+            "No .java files found (checked project root and src/main/java)"
+        )
+
+    compile_cmd = ["javac"] + [str(p.relative_to(project)) for p in java_files]
     compile_proc = subprocess.run(
         compile_cmd,
         cwd=project,
@@ -25,7 +34,13 @@ def compile_and_run(project_path: str, main_class: str) -> dict:
             "exit_code": compile_proc.returncode
         }
 
-    run_cmd = ["java", main_class]
+    run_cmd = [
+        "java",
+        "-cp",
+        "target/classes",
+        main_class
+    ]
+
     run_proc = subprocess.run(
         run_cmd,
         cwd=project,
