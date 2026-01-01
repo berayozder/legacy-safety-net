@@ -8,3 +8,4 @@ The goal is safety.
 
 By capturing and locking in current behavior, teams can refactor
 legacy systems with confidence.
+# legacy-safety-net
