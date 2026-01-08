@@ -1,35 +1,45 @@
-name: Legacy Safety Net CI
+name: Safety Net CI
 
 on:
   push:
+    branches: [ "main" ]
   pull_request:
+    branches: [ "main" ]
 
 jobs:
-  safetynet:
+  test-legacy-app:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+    # 1. Checkout Repository Code
+    - uses: actions/checkout@v3
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
+    # 2. Set up Java Environment (Required for Legacy App & Gson)
+    - name: Set up JDK 17
+      uses: actions/setup-java@v3
+      with:
+        java-version: '17'
+        distribution: 'temurin'
 
-      - name: Set up Java 8
-        uses: actions/setup-java@v4
-        with:
-          distribution: "temurin"
-          java-version: "8"
+    # 3. Set up Python Environment (For the Orchestrator CLI)
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.10"
 
-      - name: Install Python dependencies
-        run: |
-          python -m venv .venv
-          . .venv/bin/activate
-          pip install --upgrade pip
+    # 4. Download Dependencies
+    # Ensures gson-2.10.1.jar exists in the CI environment
+    - name: Download Gson Dependency
+      run: |
+        mkdir -p lib
+        curl -L -o lib/gson-2.10.1.jar https://repo1.maven.org/maven2/com/google/code/gson/gson/2.10.1/gson-2.10.1.jar
 
-      - name: Run SafetyNet (strict mode)
-        run: |
-          . .venv/bin/activate
-          python -m safetynet.cli examples/legacy_java_app --main LegacyApp --strict
+    # 5. Execute Safety Net in Strict Mode
+    # This simulates a CI pipeline ensuring no regression logic breaks the build
+    - name: Run Safety Net (Strict Mode)
+      run: |
+        # Execute tool against the complex 'getBatchUsers' method (List<User>)
+        python cli.py src_legacy --main LegacyApp --method getBatchUsers --strict --accept
+        
+        # Verify that the JUnit test file was successfully generated
+        ls -l src_legacy/.safetynet/GeneratedSafetyNetTest.java

@@ -25,8 +25,7 @@ If you change the code and the output changes, the test fails.
 
 ## How It Works
 
-Python orchestrates the process.
-
+Python orchestrates the process
 Java Reflection runs inside the application to spy on data.
 
 Gson saves the object state to a file.
