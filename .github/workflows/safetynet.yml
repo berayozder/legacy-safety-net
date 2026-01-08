@@ -42,9 +42,6 @@ jobs:
     # This simulates a CI pipeline ensuring no regression logic breaks the build
     - name: Run Safety Net (Strict Mode)
       run: |
-        ls -R
-        # Execute tool against the complex 'getBatchUsers' method (List<User>)
-        python safetynet/cli.py src_legacy --main LegacyApp --method getBatchUsers --strict --accept
+        python cli.py src_legacy --main LegacyApp --method getBatchUsers --strict --accept
         
-        # Verify that the JUnit test file was successfully generated
         ls -l src_legacy/.safetynet/GeneratedSafetyNetTest.java
