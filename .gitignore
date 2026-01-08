@@ -1,14 +1,18 @@
 # Python
-.venv/
 __pycache__/
 *.pyc
+.venv/
+venv/
 
 # Java
+target/
 *.class
+*.log
 
-# Safety net output (keep snapshots if you want, but usually ignore)
-examples/**/.safetynet/
+# SafetyNet Generated Files 
+.safetynet/
+.safetynet
+src_legacy/.safetynet/
 
-# OS
+# OS Files
 .DS_Store
-ROADMAP.md
