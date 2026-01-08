@@ -1,14 +1,13 @@
-from typing import Dict, List
+from typing import Dict, List, Optional
 import difflib
-
 
 def diff_snapshots(baseline: Dict, current: Dict) -> Dict:
     """
-    Compare two behavior snapshots and return structured differences.
+    Compare two behavior snapshots (baseline vs current) and return structured differences.
     """
     diffs = {}
 
-    # Exit code diff
+    # Check for Exit Code deviations
     if baseline.get("exit_code") != current.get("exit_code"):
         diffs["exit_code"] = {
             "severity": "critical",
@@ -16,7 +15,7 @@ def diff_snapshots(baseline: Dict, current: Dict) -> Dict:
             "after": current.get("exit_code"),
         }
 
-    # Stdout diff
+    # Check for Standard Output deviations
     if baseline.get("stdout") != current.get("stdout"):
         diffs["stdout"] = {
             "severity": "medium",
@@ -26,8 +25,7 @@ def diff_snapshots(baseline: Dict, current: Dict) -> Dict:
             )
         }
 
-
-    # Stderr diff
+    # Check for Standard Error deviations
     if baseline.get("stderr") != current.get("stderr"):
         diffs["stderr"] = {
             "severity": "medium",
@@ -37,13 +35,14 @@ def diff_snapshots(baseline: Dict, current: Dict) -> Dict:
             )
         }
 
+    # Note: Future versions should include deep diffing of "captured_return_value" JSON objects.
 
     return diffs
 
 
 def text_diff(before: str, after: str) -> List[str]:
     """
-    Line-based unified diff for human-readable output.
+    Generates a unified diff for human-readable output.
     """
     before_lines = before.splitlines(keepends=True)
     after_lines = after.splitlines(keepends=True)
@@ -52,7 +51,7 @@ def text_diff(before: str, after: str) -> List[str]:
         difflib.unified_diff(
             before_lines,
             after_lines,
-            fromfile="before",
-            tofile="after",
+            fromfile="baseline",
+            tofile="current",
         )
     )

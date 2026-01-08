@@ -1,37 +1,42 @@
 from pathlib import Path
-from safetynet.recorder.recorder import save_snapshot
+import json
 
-def generate_junit_test(project_path: str, main_class: str, snapshot: dict) -> str:
-    snapshot_path = save_snapshot(project_path, snapshot)
-
+def generate_junit_test(project_path: str, main_class: str, method_name: str, snapshot: dict) -> str:
+    """
+    Generates a reproducible JUnit 5 test case based on the captured snapshot.
+    """
     out_dir = Path(project_path) / ".safetynet"
     test_file = out_dir / "GeneratedSafetyNetTest.java"
 
-    expected_stdout = snapshot["stdout"].replace("\\", "\\\\").replace("\"", "\\\"")
+    # Serialize the captured object back to a JSON string for the Java test.
+    # We use separators=(',', ':') to remove whitespace, ensuring format compatibility with Gson's default output.
+    expected_json_str = json.dumps(snapshot["captured_return_value"], separators=(',', ':')).replace('"', '\\"')
 
-    test_code = f"""\
+    # JUnit 5 Template utilizing Gson and Reflection
+    test_code = f"""
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
-import java.io.*;
+import com.google.gson.Gson;
+import java.lang.reflect.Method;
 
 public class GeneratedSafetyNetTest {{
 
     @Test
-    public void test_{main_class}_stdout_is_stable() throws Exception {{
-        ProcessBuilder pb = new ProcessBuilder("java", "{main_class}");
-        pb.directory(new File("{Path(project_path).as_posix()}"));
-        pb.redirectErrorStream(true);
+    public void test_{method_name}_behavior() throws Exception {{
+        // 1. ARRANGE
+        String expectedJson = "{expected_json_str}";
+        Gson gson = new Gson();
+        
+        Class<?> clazz = Class.forName("{main_class}");
+        Object instance = clazz.getDeclaredConstructor().newInstance();
+        Method method = clazz.getMethod("{method_name}");
 
-        Process p = pb.start();
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        try (InputStream is = p.getInputStream()) {{
-            is.transferTo(baos);
-        }}
-        int code = p.waitFor();
+        // 2. ACT (Invoke the real method via Reflection)
+        Object actualResult = method.invoke(instance);
+        String actualJson = gson.toJson(actualResult);
 
-        String output = baos.toString().trim();
-        assertEquals(0, code, "Exit code changed");
-        assertEquals("{expected_stdout.strip()}", output, "Stdout changed");
+        // 3. ASSERT (Compare serialized states)
+        assertEquals(expectedJson, actualJson, "Method return value has changed (Regression detected)!");
     }}
 }}
 """
