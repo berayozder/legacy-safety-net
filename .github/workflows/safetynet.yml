@@ -9,39 +9,41 @@ on:
 jobs:
   test-legacy-app:
     runs-on: ubuntu-latest
-
+    
     defaults:
       run:
         working-directory: ./safetynet
 
     steps:
-    # 1. Checkout Repository Code
     - uses: actions/checkout@v3
 
-    # 2. Set up Java Environment (Required for Legacy App & Gson)
     - name: Set up JDK 17
       uses: actions/setup-java@v3
       with:
         java-version: '17'
         distribution: 'temurin'
 
-    # 3. Set up Python Environment (For the Orchestrator CLI)
     - name: Set up Python 3.10
       uses: actions/setup-python@v4
       with:
         python-version: "3.10"
 
-    # 4. Download Dependencies
-    # Ensures gson-2.10.1.jar exists in the CI environment
+
     - name: Download Gson Dependency
       run: |
         mkdir -p lib
         curl -L -o lib/gson-2.10.1.jar https://repo1.maven.org/maven2/com/google/code/gson/gson/2.10.1/gson-2.10.1.jar
 
-    # 5. Execute Safety Net in Strict Mode
-    # This simulates a CI pipeline ensuring no regression logic breaks the build
-    - name: Run Safety Net (Strict Mode)
+
+    - name: Run Safety Net Tests
       run: |
+        echo "🧪 TEST 1: Complex Type Verification (List<User>)..."
         python cli.py src_legacy --main LegacyApp --method getBatchUsers --strict --accept
         
-        ls -l src_legacy/.safetynet/GeneratedSafetyNetTest.java
+        echo "✅ Test 1 Passed! Now running Test 2..."
+        
+        echo "🧪 TEST 2: Side-Effect Verification (updateUserAge)..."
+        
+        python cli.py src_legacy --main LegacyApp --method updateUserAge --strict --accept
+        
+        echo "✅ All scenarios passed successfully!"
