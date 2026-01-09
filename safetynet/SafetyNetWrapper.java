@@ -1,9 +1,13 @@
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * SafetyNetWrapper
- * Acts as an introspection agent to capture the runtime state of legacy code.
+ * Introspection agent that captures argument states before and after execution 
+ * to detect side effects and return values.
  */
 public class SafetyNetWrapper {
     public static void main(String[] args) {
@@ -14,24 +18,48 @@ public class SafetyNetWrapper {
 
         String className = args[0];
         String methodName = args[1];
+        
+        // Configure Gson to include nulls for accurate regression testing
+        Gson gson = new GsonBuilder().serializeNulls().create();
 
         try {
-            // 1. Load Target Class via Reflection
             Class<?> clazz = Class.forName(className);
             Object instance = clazz.getDeclaredConstructor().newInstance();
 
-            // 2. Locate Target Method
-            Method method = clazz.getMethod(methodName);
+            // 1. ARGUMENT PREPARATION
+            // Note: In a full production version, arguments would be deserialized from a config file.
+            // For this demo, we manually setup the 'User' object scenario.
+            Object[] methodArgs = null;
+            Class<?>[] paramTypes = null;
 
-            // 3. Invoke Method
-            Object result = method.invoke(instance);
+            if (methodName.equals("updateUserAge")) {
+                methodArgs = new Object[] { new User("Intern", 25) };
+                paramTypes = new Class<?>[] { User.class };
+            } else {
+                methodArgs = null;
+                paramTypes = null;
+            }
 
-            // 4. Serialize Result to JSON
-            Gson gson = new Gson();
-            String jsonResult = gson.toJson(result);
+            Method method = clazz.getMethod(methodName, paramTypes);
 
-            // 5. Output with specific marker for the Python recorder
-            System.out.println("###SAFETYNET_RESULT###" + jsonResult);
+            // 2. CAPTURE BEFORE STATE
+            String argsBeforeJson = (methodArgs != null) ? gson.toJson(methodArgs) : "null";
+
+            // 3. EXECUTE METHOD
+            Object result = method.invoke(instance, methodArgs);
+
+            // 4. CAPTURE AFTER STATE (Detect Side Effects)
+            String argsAfterJson = (methodArgs != null) ? gson.toJson(methodArgs) : "null";
+            String returnJson = gson.toJson(result);
+
+            // 5. CONSTRUCT FINAL REPORT
+            Map<String, Object> finalReport = new HashMap<>();
+            finalReport.put("return_value", gson.fromJson(returnJson, Object.class));
+            finalReport.put("args_before", gson.fromJson(argsBeforeJson, Object.class));
+            finalReport.put("args_after", gson.fromJson(argsAfterJson, Object.class));
+
+            // Output the result with a unique delimiter for the Python parser
+            System.out.println("###SAFETYNET_RESULT###" + gson.toJson(finalReport));
 
         } catch (Exception e) {
             e.printStackTrace();
