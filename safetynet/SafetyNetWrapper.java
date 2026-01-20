@@ -6,7 +6,7 @@ import java.util.Map;
 
 /**
  * SafetyNetWrapper
- * Introspection agent that captures argument states before and after execution 
+ * Introspection agent that captures argument states before and after execution
  * to detect side effects and return values.
  */
 public class SafetyNetWrapper {
@@ -18,7 +18,7 @@ public class SafetyNetWrapper {
 
         String className = args[0];
         String methodName = args[1];
-        
+
         // Configure Gson to include nulls for accurate regression testing
         Gson gson = new GsonBuilder().serializeNulls().create();
 
@@ -27,7 +27,8 @@ public class SafetyNetWrapper {
             Object instance = clazz.getDeclaredConstructor().newInstance();
 
             // 1. ARGUMENT PREPARATION
-            // Note: In a full production version, arguments would be deserialized from a config file.
+            // Note: In a full production version, arguments would be deserialized from a
+            // config file.
             // For this demo, we manually setup the 'User' object scenario.
             Object[] methodArgs = null;
             Class<?>[] paramTypes = null;

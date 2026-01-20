@@ -1,9 +1,9 @@
 import java.util.*;
 
 public class LegacyApp {
-    
+
     public User getUserData() {
-        return new User("Cern Engineer", 42); 
+        return new User("Hacker", 42);
     }
 
     public List<User> getBatchUsers() {
@@ -13,7 +13,7 @@ public class LegacyApp {
         return users;
     }
 
-   public void updateUserAge(User user) {
+    public void updateUserAge(User user) {
         user.setAge(user.getAge() + 1);
     }
 }

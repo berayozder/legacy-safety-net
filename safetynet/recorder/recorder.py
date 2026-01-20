@@ -21,7 +21,8 @@ def record_behavior(run_result: dict) -> dict:
     snapshot = {
         "exit_code": run_result["exit_code"],
         "captured_return_value": json_output, # We are now capturing the actual object state
-        "raw_stdout": stdout  # Kept for debugging purposes
+        "raw_stdout": stdout,  # Kept for debugging purposes
+        "stderr": run_result.get("stderr", "")
     }
     return snapshot
 

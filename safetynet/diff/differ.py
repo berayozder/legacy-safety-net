@@ -15,18 +15,29 @@ def diff_snapshots(baseline: Dict, current: Dict) -> Dict:
             "after": current.get("exit_code"),
         }
 
-    # Check for Standard Output deviations
-    if baseline.get("stdout") != current.get("stdout"):
-        diffs["stdout"] = {
-            "severity": "medium",
+    # Check for Captured Return Value deviations
+    if baseline.get("captured_return_value") != current.get("captured_return_value"):
+        import json
+        diffs["captured_return_value"] = {
+            "severity": "high",
             "diff": text_diff(
-                baseline.get("stdout", ""),
-                current.get("stdout", "")
+                json.dumps(baseline.get("captured_return_value"), indent=2, sort_keys=True),
+                json.dumps(current.get("captured_return_value"), indent=2, sort_keys=True)
+            )
+        }
+
+    # Check for Standard Output deviations (raw_stdout)
+    if baseline.get("raw_stdout", "") != current.get("raw_stdout", ""):
+        diffs["stdout"] = {
+            "severity": "low", # Low because return value is more important
+            "diff": text_diff(
+                baseline.get("raw_stdout", ""),
+                current.get("raw_stdout", "")
             )
         }
 
     # Check for Standard Error deviations
-    if baseline.get("stderr") != current.get("stderr"):
+    if baseline.get("stderr", "") != current.get("stderr", ""):
         diffs["stderr"] = {
             "severity": "medium",
             "diff": text_diff(
@@ -34,8 +45,6 @@ def diff_snapshots(baseline: Dict, current: Dict) -> Dict:
                 current.get("stderr", "")
             )
         }
-
-    # Note: Future versions should include deep diffing of "captured_return_value" JSON objects.
 
     return diffs
 
